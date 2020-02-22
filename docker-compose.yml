@@ -7,6 +7,8 @@ services:
       - "5000:5000"
     depends_on:
       - db
+    environment:
+      MYSQL_DATABASE_URI: mysql+pymysql://sat:123@172.17.0.1:3306/satellites
     volumes:
       - .:/app
 
