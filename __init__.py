@@ -1,4 +1,5 @@
 from flask import Flask
+from sqlalchemy import create_engine
 
 
 app = Flask(__name__)
@@ -11,3 +12,5 @@ def dashboard():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+    engine = create_engine('mysql+pymysql://sat:123@mysql/satellites', echo=True)
+    connection = engine.connect()
