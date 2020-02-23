@@ -13,9 +13,11 @@ db_session = init_db(app)
 @app.route('/')
 def dashboard():
     time_measurement = measure_time()
+    measures = min_max()
     return render_template(
         'dashboard.html',
-        time_measurement=time_measurement
+        time_measurement=time_measurement,
+        measures=measures,
     )
 
 
@@ -38,29 +40,46 @@ def measure_time():
     return [{'label': m.name, 'y': m.total} for m in results]
 
 
-@app.route('/task2/spot7')
-def task2():
+def min_max():
+    """Task 2"""
     sql = """
         select
             min(ionosphere) min_iono,
             max(ionosphere) max_iono,
+            avg(ionosphere) avg_iono,
             min(ndvi) min_ndvi,
             max(ndvi) max_ndvi,
+            avg(ndvi) avg_ndvi,
             min(radiation) min_radiation,
             max(radiation) max_radiation,
+            avg(radiation) avg_radiation,
             s.name
         from
             satellite_data sd
             inner join satellites s on sd.satellite_id = s.id
-        where
-            s.name = 'SPOT7'
         group by
             sd.satellite_id
     """
     q = db_session.execute(sql)
     results = q.fetchall()
-    output = '\n'.join([f'{m.name}: IONO-{m.min_iono}/{m.max_iono}' for m in results])
-    return jsonify(output)
+    return {
+        m.name: {
+            'ionosphere': {
+                'min': m.min_iono,
+                'max': m.max_iono,
+                'avg': m.avg_iono,
+            },
+            'ndvi': {
+                'min': m.min_ndvi,
+                'max': m.max_ndvi,
+                'avg': m.avg_ndvi,
+            },
+            'radiation': {
+                'min': m.min_radiation,
+                'max': m.max_radiation,
+                'avg': m.avg_radiation,
+            },
+        } for m in results}
 
 
 @app.route('/task3')

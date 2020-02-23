@@ -26,5 +26,17 @@
 </head>
 <body>
   <div id="task1" style="height: 300px; width: 100%;"></div>
+
+  {% for sat, data in measures.items() %}
+  <div>
+    <h1>{{ sat }}</h1>
+    <dl>
+      {% for metric, details in data.items() %}
+      <dt>{{ metric }}</dt>
+      <dd>{{ details.max }}(MAX), {{ details.min }}(MIN), {{ details.avg|round(1) }}(AVG)</dd>
+      {% endfor %}
+    </dl>
+  </div>
+  {% endfor %}
 </body>
 </html>
