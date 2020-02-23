@@ -17,4 +17,4 @@ COPY . /app
 WORKDIR /app
 
 ENTRYPOINT ["python"]
-CMD ["__init__.py"]
+CMD ["app.py"]

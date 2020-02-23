@@ -1,6 +1,6 @@
 import sys
 
-from __init__ import db_session
+from app import db_session
 from models import import_sat_data
 
 

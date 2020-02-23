@@ -2,15 +2,8 @@ import os
 
 import sqlalchemy as db
 
-from __init__ import db_session
-from models import (
-    Base,
-    FileImport,
-    Satellite,
-    SatelliteData,
-    add_satellites,
-    import_sat_data,
-)
+from app import db_session
+from models import Base, add_satellites, import_sat_data
 
 
 database_uri = os.environ.get('MYSQL_DATABASE_URI')
@@ -21,4 +14,3 @@ except TypeError:
 
 Base.metadata.create_all(engine)
 add_satellites(db_session)
-import_sat_data(['satDataCSV2.csv'], db_session)
