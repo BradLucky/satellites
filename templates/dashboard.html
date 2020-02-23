@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+  <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+  <script>
+    window.onload = function () {
+      var chart1 = new CanvasJS.Chart("task1", {
+        title: {
+          text: "Time Over Area"
+        },
+        axisX: {
+          title: "Satellite"
+        },
+        axisY: {
+          title: "Time (mins)"
+        },
+        data: [{
+        // Change type to "doughnut", "line", "splineArea", etc.
+          type: "bar",
+          dataPoints: {{ time_measurement|tojson }}
+        }]
+      });
+      chart1.render();
+    }
+  </script>
+</head>
+<body>
+  <div id="task1" style="height: 300px; width: 100%;"></div>
+</body>
+</html>

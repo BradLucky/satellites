@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 
 from config import Config
 from models import init_db
@@ -12,6 +12,15 @@ db_session = init_db(app)
 
 @app.route('/')
 def dashboard():
+    time_measurement = measure_time()
+    return render_template(
+        'dashboard.html',
+        time_measurement=time_measurement
+    )
+
+
+def measure_time():
+    """Task 1"""
     sql = """
         select
             min(measurement_dt) min,
@@ -26,8 +35,7 @@ def dashboard():
     """
     q = db_session.execute(sql)
     results = q.fetchall()
-    output = '\n'.join([f'{m.name}: {m.total}' for m in results])
-    return jsonify(output)
+    return [{'label': m.name, 'y': m.total} for m in results]
 
 
 @app.route('/task2/spot7')
