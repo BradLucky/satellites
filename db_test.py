@@ -21,4 +21,4 @@ except TypeError:
 
 Base.metadata.create_all(engine)
 add_satellites(db_session)
-import_sat_data('satDataCSV2.csv', db_session)
+import_sat_data(['satDataCSV2.csv'], db_session)

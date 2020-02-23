@@ -92,38 +92,39 @@ def add_satellites(session_override=None):
         session.rollback()
 
 
-def import_sat_data(csv_filename, session_override=None):
+def import_sat_data(csv_filenames, session_override=None):
     if session_override:
         session = session_override
 
-    file_import = FileImport(
-        filename=csv_filename,
-        start_dt=datetime.now(),
-    )
-    session.add(file_import)
-    session.commit()
+    for csv_filename in csv_filenames:
+        file_import = FileImport(
+            filename=csv_filename,
+            start_dt=datetime.now(),
+        )
+        session.add(file_import)
+        session.commit()
 
-    with open(csv_filename) as csv_file:
-        reader = csv.DictReader(csv_file, delimiter=';')
-        for row in reader:
-            measurement = SatelliteData(
-                satellite_id=row['idSat'],
-                file_import_id=file_import.id,
-                measurement_dt=datetime.strptime(row['timestamp'], '%m-%d-%Y %H:%M'),
-                ionosphere=row['ionoIndex'],
-                ndvi=row['ndviIndex'],
-                radiation=row['radiationIndex'],
-                measurement=row['specificMeasurement'],
-            )
-            session.add(measurement)
-        
-    session.commit()
+        with open(csv_filename) as csv_file:
+            reader = csv.DictReader(csv_file, delimiter=';')
+            for row in reader:
+                measurement = SatelliteData(
+                    satellite_id=row['idSat'],
+                    file_import_id=file_import.id,
+                    measurement_dt=datetime.strptime(row['timestamp'], '%m-%d-%Y %H:%M'),
+                    ionosphere=row['ionoIndex'],
+                    ndvi=row['ndviIndex'],
+                    radiation=row['radiationIndex'],
+                    measurement=row['specificMeasurement'],
+                )
+                session.add(measurement)
 
-    file_import.end_dt = datetime.now()
-    session.commit()
+        session.commit()
+
+        file_import.end_dt = datetime.now()
+        session.commit()
 
 
 def create_db():
     Base.metadata.create_all(engine)
     add_satellites()
-    import_sat_data('satDataCSV2.csv')
+    import_sat_data(['satDataCSV2.csv'])
