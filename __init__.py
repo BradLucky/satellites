@@ -3,7 +3,7 @@ from collections import Counter
 from flask import Flask, jsonify, render_template
 
 from config import Config
-from models import init_db
+from models import init_db, SatelliteData
 
 
 app = Flask(__name__)
@@ -17,6 +17,17 @@ class SatMeasure:
         self.name = details.name
         self.metric = details.metric
         self.data_set = data_set
+
+    @property
+    def time_invested(self):
+        times = [n.measurement_dt for n in self.data_set]
+        elapsed = str(max(times) - min(times))
+        hours, mins, secs = elapsed.split(':')
+
+        if int(hours) > 0:
+            return f'{hours}h{mins}min'
+
+        return f'{mins}min'
 
     @property
     def ionosphere(self):
@@ -50,8 +61,6 @@ class SatMeasure:
 
 @app.route('/')
 def dashboard():
-    from models import SatelliteData
-
     all_data = db_session.query(SatelliteData).all()
     data_by_sat = {}
 
@@ -62,7 +71,18 @@ def dashboard():
     for sat, data in data_by_sat.items():
         sats.append(SatMeasure(sat, data))
 
-    d = {sat.name: {
+    measures = get_satellite_details(sats)
+
+    return render_template(
+        'dashboard.html',
+        time_measurement={sat.name: sat.time_invested for sat in sats},
+        measures=measures,
+        averages=get_category_averages(measures),
+    )
+
+
+def get_satellite_details(satellites):
+    return {sat.name: {
         'Ionosphere': {
             'min': min(sat.ionosphere),
             'max': max(sat.ionosphere),
@@ -79,34 +99,23 @@ def dashboard():
             'avg': sum(sat.radiation) / len(sat.radiation),
         },
         sat.metric: sat.metric_measure,
-    } for sat in sats}
-
-    time_measurement = measure_time()
-    return render_template(
-        'dashboard.html',
-        time_measurement=time_measurement,
-        measures=d,
-    )
+    } for sat in satellites}
 
 
-def measure_time():
-    """Task 1"""
-    sql = """
-        select
-            min(measurement_dt) min,
-            max(measurement_dt) max,
-            max(measurement_dt) - min(measurement_dt) total,
-            s.name
-        from
-            satellite_data sd
-            inner join satellites s on sd.satellite_id = s.id
-        group by
-            sd.satellite_id
-    """
-    q = db_session.execute(sql)
-    results = q.fetchall()
-    return [{'x': m.name, 'y': m.total} for m in results]
+def get_category_averages(satellites):
+    cat_avgs = {}
+    for sat_name, details in satellites.items():
+        for metric, measurements in details.items():
+            if metric in ['Ionosphere', 'NDVI', 'Radiation']:
+                cat_avgs.setdefault(metric, {}).update({
+                    sat_name: measurements['avg']
+                })
 
+    # sort by averages
+    return {m: {
+        s: v for s, v in sorted(d.items(), key=lambda n: n[1], reverse=True)
+        } for m, d in cat_avgs.items()
+    }
 
 @app.route('/task3')
 def task3():

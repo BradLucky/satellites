@@ -18,132 +18,132 @@
 <body>
   <div class="container">
 
-    <canvas id="chartjs-task1" width="100%" height="30"></canvas>
-    <script>
-      var dataPoints = {{ time_measurement|tojson }}
-      var labels = dataPoints.map(item => {return item.x});
-      var times = dataPoints.map(item => {return item.y});
-      new Chart('chartjs-task1', {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Time (mins)',
-            data: times,
-            backgroundColor: function(context) {
-              return bgColors(context);
-            },
-            borderWidth: 1
-          }]
-        },
-        options: {
-          scales: {
-            yAxes: [{
-              ticks: {
-                beginAtZero: true
-              }
-            }]
-          }
-        }
-      });
-    </script>
+    <div class="row row-cols-1 row-cols-lg-2">
+      <div class="col mb-4">
+        <div class="card h-100">
+          <div class="card-header">Elapsed Time Over Area</div>
+          <div class="card-body">
+            {% for sat_name, time_elapsed in time_measurement.items() %}
+            {{ sat_name }} - {{ time_elapsed }}<br>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="col mb-4">
+        <div class="card h-100">
+          <div class="card-header">Averages</div>
+          <div class="card-body">
+            <dl>
+              {% for metric, details in averages.items() %}
+              <dt>@{{ metric }} Index</dt>
+              <dd>
+                {% for sat_name, avg in details.items() %}
+                {{ sat_name }} - {{ avg|round(1) }}<br>
+                {% endfor %}
+              </dd>
+              {% endfor %}
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
 
     {% for sat, data in measures.items() %}
     {% if loop.index is not divisibleby 2 %}
     <div class="row row-cols-1 row-cols-lg-2">
     {% endif %}
-    <div class="col mb-4">
-      <div class="card h-100">
-        <div class="card-header">{{ sat }}</div>
-        <div class="card-body">
-          <dl>
-            {% for metric, details in data.items() %}
-            <dt>{{ metric }}</dt>
-            {% if metric in ['Ionosphere', 'NDVI', 'Radiation'] %}
-            <dd>{{ details.max }}(MAX), {{ details.min }}(MIN), {{ details.avg|round(1) }}(AVG)</dd>
-            {% elif metric == 'Earth Altitude' %}
-            <script>
-              details = {{ details|tojson }};
-              datedData = details.map(item => {
-                updated = {};
+      <div class="col mb-4">
+        <div class="card h-100">
+          <div class="card-header">{{ sat }}</div>
+          <div class="card-body">
+            <dl>
+              {% for metric, details in data.items() %}
+              <dt>{{ metric }}</dt>
+              {% if metric in ['Ionosphere', 'NDVI', 'Radiation'] %}
+              <dd>{{ details.max }}(MAX), {{ details.min }}(MIN), {{ details.avg|round(1) }}(AVG)</dd>
+              {% elif metric == 'Earth Altitude' %}
+              <script>
+                details = {{ details|tojson }};
+                datedData = details.map(item => {
+                  updated = {};
 
-                updated.label = item.label;
-                updated.y = new Date(item.y + 'Z');
+                  updated.label = item.label;
+                  updated.y = new Date(item.y + 'Z');
 
-                return updated;
-              });
-            </script>
-            <div id="chart-{{ sat }}">
-              <canvas id="{{ sat }}-graph"></canvas>
-              <script>
-                var dataPoints = {{ details|tojson }};
-                var labels = dataPoints.map(item => {return item.x});
-                var times = dataPoints.map(item => {return item.y});
-                new Chart('{{ sat }}-graph', {
-                  type: 'line',
-                  data: {
-                    labels: labels,
-                    datasets: [{
-                      label: 'Altitude',
-                      data: times,
-                      backgroundColor: function(context) {
-                        return bgColors(context);
-                      },
-                      borderWidth: 1
-                    }]
-                  }
+                  return updated;
                 });
               </script>
-            </div>
-            {% elif metric == 'Sea Salinity' %}
-            <div id="chart-{{ sat }}">
-              <canvas id="{{ sat }}-graph"></canvas>
-              <script>
-                var dataPoints = {{ details|tojson }};
-                var labels = dataPoints.map(item => {return item.x});
-                var times = dataPoints.map(item => {return item.y});
-                new Chart('{{ sat }}-graph', {
-                  type: 'line',
-                  data: {
-                    labels: labels,
-                    datasets: [{
-                      label: 'Salinity',
-                      data: times,
-                      backgroundColor: function(context) {
-                        return bgColors(context);
-                      },
-                      borderWidth: 1
-                    }]
-                  }
-                });
-              </script>
-            </div>
-            {% elif metric == 'Vegetation Classification' %}
-            <div id="chart-{{ sat }}">
-              <canvas id="{{ sat }}-graph"></canvas>
-              <script>
-                var dataPoints = {{ details|tojson }};
-                new Chart('{{ sat }}-graph', {
-                  type: 'pie',
-                  data: {
-                    labels: Object.keys(dataPoints),
-                    datasets: [{
-                      data: Object.values(dataPoints),
-                      backgroundColor: function(context) {
-                        return bgColors(context);
-                      },
-                      borderWidth: 1
-                    }]
-                  },
-                });
-              </script>
-            </div>
-            {% endif %}
-            {% endfor %}
-          </dl>
+              <div id="chart-{{ sat }}">
+                <canvas id="{{ sat }}-graph"></canvas>
+                <script>
+                  var dataPoints = {{ details|tojson }};
+                  var labels = dataPoints.map(item => {return item.x});
+                  var times = dataPoints.map(item => {return item.y});
+                  new Chart('{{ sat }}-graph', {
+                    type: 'line',
+                    data: {
+                      labels: labels,
+                      datasets: [{
+                        label: 'Altitude',
+                        data: times,
+                        backgroundColor: function(context) {
+                          return bgColors(context);
+                        },
+                        borderWidth: 1
+                      }]
+                    }
+                  });
+                </script>
+              </div>
+              {% elif metric == 'Sea Salinity' %}
+              <div id="chart-{{ sat }}">
+                <canvas id="{{ sat }}-graph"></canvas>
+                <script>
+                  var dataPoints = {{ details|tojson }};
+                  var labels = dataPoints.map(item => {return item.x});
+                  var times = dataPoints.map(item => {return item.y});
+                  new Chart('{{ sat }}-graph', {
+                    type: 'line',
+                    data: {
+                      labels: labels,
+                      datasets: [{
+                        label: 'Salinity',
+                        data: times,
+                        backgroundColor: function(context) {
+                          return bgColors(context);
+                        },
+                        borderWidth: 1
+                      }]
+                    }
+                  });
+                </script>
+              </div>
+              {% elif metric == 'Vegetation Classification' %}
+              <div id="chart-{{ sat }}">
+                <canvas id="{{ sat }}-graph"></canvas>
+                <script>
+                  var dataPoints = {{ details|tojson }};
+                  new Chart('{{ sat }}-graph', {
+                    type: 'pie',
+                    data: {
+                      labels: Object.keys(dataPoints),
+                      datasets: [{
+                        data: Object.values(dataPoints),
+                        backgroundColor: function(context) {
+                          return bgColors(context);
+                        },
+                        borderWidth: 1
+                      }]
+                    },
+                  });
+                </script>
+              </div>
+              {% endif %}
+              {% endfor %}
+            </dl>
+          </div>
         </div>
       </div>
-    </div>
     {% if loop.index is divisibleby 2 %}
     </div>
     {% endif %}
