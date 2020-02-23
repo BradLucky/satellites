@@ -37,3 +37,21 @@ mysql>
 
 ## Viewing the Dashboard
 Open up http://127.0.0.1:5000/ in your browser.
+
+## Development Details on this project
+The following explains some of the approach taken for making this dashboard possible.
+
+### Database Design
+The database is a MySQL database, and contains 3 tables:
+
+* `file_imports` - stores details from each imported file, including the start and end time and the imported filename.
+* `satellites` - stores details about each satellite such as a unique identifier, human readable name, and a metric specific to said satellite.
+* `satellite_data` - stores individual data points measured by each satellite over it's flyover of the area in question; it has foreign keys to both of the other tables (`file_import_id` and `satellite_id`) and lists out a few different measurements, including the metric specifically assigned to said satellite.
+
+The tables are all defined within `models/__init__.py` for simple creation, but they are also mirrored by `CREATE` statements stored in `sql/db_setup.sql`. There are also some helper methods in `models/__init__.py` such as the CSV importer and DB initializer.
+
+### Flask
+The application is built using the Flask framework. There is one template file used to show the entire dashboard, and thus also only one route. All of the Flask setup is in `app.py` for simplicity.
+
+### SatMeasure Class
+There is one class to represent each satellite and its measurements. From this class, all of the metrics can be determined to show on the dashboard. After grabbing all the data from the `satellite_data` table, this class is instantiated for each satellite. Each calculation is documented within the docstrings of the class.

@@ -1,3 +1,4 @@
+"""Provides access to the database via SQLAlchemy and defines the data models."""
 import csv
 import os
 from datetime import datetime
@@ -12,6 +13,11 @@ engine = None
 
 
 def init_db(app):
+    """Initialize the database session for accessing it.
+
+    Attempt to get the URI from the Docker container, falling
+    back to the OS environment variable if that fails.
+    """
     global engine
     global session
 
@@ -40,7 +46,7 @@ class Satellite(Base):
     metric = db.Column(db.String(length=255))
 
     def __repr__(self):
-        return f'<Satellite {self.id}>'
+        return f'<Satellite ({self.name})>'
 
 
 class FileImport(Base):
@@ -52,7 +58,7 @@ class FileImport(Base):
     end_dt = db.Column(db.DateTime)
 
     def __repr__(self):
-        return f'<FileImport {self.id}>'
+        return f'<FileImport ({self.id})>'
 
 
 class SatelliteData(Base):
@@ -70,10 +76,16 @@ class SatelliteData(Base):
     measurement = db.Column(db.String(length=255))
 
     def __repr__(self):
-        return f'<SatelliteData {self.id}>'
+        return f'<SatelliteData ({self.id})>'
 
 
 def add_satellites(session_override=None):
+    """Initialize the database with the 4 original satellites.
+
+    Simply loop through the dictionary of defined satellites
+    and create a Satellite object as a database model object.
+    After a commit at the end, these are ready to use.
+    """
     if session_override:
         session = session_override
 
@@ -93,6 +105,22 @@ def add_satellites(session_override=None):
 
 
 def import_sat_data(csv_filenames, session_override=None):
+    """Import satellite data from CSV files.
+
+    A list of files can be imported in one command, and this
+    will add all the data to the `satellite_data` table.
+
+    A session_override is included in the case of importing
+    from the command line. A new database session needs to
+    be instantiated in order for this to access the database.
+
+    The CSV file must be in the exact format (with semicolon
+    delimiters and the datetime as MM-DD-YYYY HH:MI) in order
+    for this to work.
+
+    The `file_import` table is updated with the details of the
+    filename and when the import started and finished.
+    """
     if session_override:
         session = session_override
 
@@ -122,9 +150,3 @@ def import_sat_data(csv_filenames, session_override=None):
 
         file_import.end_dt = datetime.now()
         session.commit()
-
-
-def create_db():
-    Base.metadata.create_all(engine)
-    add_satellites()
-    import_sat_data(['satDataCSV2.csv'])

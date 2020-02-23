@@ -1,3 +1,8 @@
+"""Easy access point for importing a CSV file.
+
+This should be called from within the Flask Docker container
+with the filename(s) as space-separated parameters.
+"""
 import sys
 
 from app import db_session

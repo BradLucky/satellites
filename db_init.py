@@ -1,3 +1,4 @@
+"""Initialize the database with the tables defined in SQLAlchemy."""
 import os
 
 import sqlalchemy as db
