@@ -73,7 +73,10 @@ class SatelliteData(Base):
         return f'<SatelliteData {self.id}>'
 
 
-def add_satellites():
+def add_satellites(session_override=None):
+    if session_override:
+        session = session_override
+
     def_satellites = [
         {'id': '30J14', 'name': 'SPOT7', 'metric': 'Earth Altitude'},
         {'id': '8J14', 'name': 'SKYSAT2', 'metric': 'Vegetation Classification'},
@@ -89,7 +92,10 @@ def add_satellites():
         session.rollback()
 
 
-def import_sat_data(csv_filename):
+def import_sat_data(csv_filename, session_override=None):
+    if session_override:
+        session = session_override
+
     file_import = FileImport(
         filename=csv_filename,
         start_dt=datetime.now(),
