@@ -1,42 +1,153 @@
 <!doctype html>
 <html>
 <head>
-  <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
   <script>
-    window.onload = function () {
-      var chart1 = new CanvasJS.Chart("task1", {
-        title: {
-          text: "Time Over Area"
-        },
-        axisX: {
-          title: "Satellite"
-        },
-        axisY: {
-          title: "Time (mins)"
-        },
-        data: [{
-        // Change type to "doughnut", "line", "splineArea", etc.
-          type: "bar",
-          dataPoints: {{ time_measurement|tojson }}
-        }]
-      });
-      chart1.render();
+    function bgColors(context) {
+      var index = context.dataIndex;
+      return index % 6 === 1 ? 'rgba(255, 99, 132, 0.5)' :
+        index % 6 === 2 ? 'rgba(54, 162, 235, 0.5)' :
+        index % 6 === 3 ? 'rgba(255, 206, 86, 0.5)' :
+        index % 6 === 4 ? 'rgba(75, 192, 192, 0.5)' :
+        index % 6 === 5 ? 'rgba(153, 102, 255, 0.5)' :
+        'rgba(255, 159, 64, 0.5)'
     }
   </script>
 </head>
 <body>
-  <div id="task1" style="height: 300px; width: 100%;"></div>
+  <div class="container">
 
-  {% for sat, data in measures.items() %}
-  <div>
-    <h1>{{ sat }}</h1>
-    <dl>
-      {% for metric, details in data.items() %}
-      <dt>{{ metric }}</dt>
-      <dd>{{ details.max }}(MAX), {{ details.min }}(MIN), {{ details.avg|round(1) }}(AVG)</dd>
-      {% endfor %}
-    </dl>
+    <canvas id="chartjs-task1" width="100%" height="30"></canvas>
+    <script>
+      var dataPoints = {{ time_measurement|tojson }}
+      var labels = dataPoints.map(item => {return item.x});
+      var times = dataPoints.map(item => {return item.y});
+      new Chart('chartjs-task1', {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Time (mins)',
+            data: times,
+            backgroundColor: function(context) {
+              return bgColors(context);
+            },
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: true
+              }
+            }]
+          }
+        }
+      });
+    </script>
+
+    {% for sat, data in measures.items() %}
+    {% if loop.index is not divisibleby 2 %}
+    <div class="row row-cols-1 row-cols-lg-2">
+    {% endif %}
+    <div class="col mb-4">
+      <div class="card h-100">
+        <div class="card-header">{{ sat }}</div>
+        <div class="card-body">
+          <dl>
+            {% for metric, details in data.items() %}
+            <dt>{{ metric }}</dt>
+            {% if metric in ['Ionosphere', 'NDVI', 'Radiation'] %}
+            <dd>{{ details.max }}(MAX), {{ details.min }}(MIN), {{ details.avg|round(1) }}(AVG)</dd>
+            {% elif metric == 'Earth Altitude' %}
+            <script>
+              details = {{ details|tojson }};
+              datedData = details.map(item => {
+                updated = {};
+
+                updated.label = item.label;
+                updated.y = new Date(item.y + 'Z');
+
+                return updated;
+              });
+            </script>
+            <div id="chart-{{ sat }}">
+              <canvas id="{{ sat }}-graph"></canvas>
+              <script>
+                var dataPoints = {{ details|tojson }};
+                var labels = dataPoints.map(item => {return item.x});
+                var times = dataPoints.map(item => {return item.y});
+                new Chart('{{ sat }}-graph', {
+                  type: 'line',
+                  data: {
+                    labels: labels,
+                    datasets: [{
+                      label: 'Altitude',
+                      data: times,
+                      backgroundColor: function(context) {
+                        return bgColors(context);
+                      },
+                      borderWidth: 1
+                    }]
+                  }
+                });
+              </script>
+            </div>
+            {% elif metric == 'Sea Salinity' %}
+            <div id="chart-{{ sat }}">
+              <canvas id="{{ sat }}-graph"></canvas>
+              <script>
+                var dataPoints = {{ details|tojson }};
+                var labels = dataPoints.map(item => {return item.x});
+                var times = dataPoints.map(item => {return item.y});
+                new Chart('{{ sat }}-graph', {
+                  type: 'line',
+                  data: {
+                    labels: labels,
+                    datasets: [{
+                      label: 'Salinity',
+                      data: times,
+                      backgroundColor: function(context) {
+                        return bgColors(context);
+                      },
+                      borderWidth: 1
+                    }]
+                  }
+                });
+              </script>
+            </div>
+            {% elif metric == 'Vegetation Classification' %}
+            <div id="chart-{{ sat }}">
+              <canvas id="{{ sat }}-graph"></canvas>
+              <script>
+                var dataPoints = {{ details|tojson }};
+                new Chart('{{ sat }}-graph', {
+                  type: 'pie',
+                  data: {
+                    labels: Object.keys(dataPoints),
+                    datasets: [{
+                      data: Object.values(dataPoints),
+                      backgroundColor: function(context) {
+                        return bgColors(context);
+                      },
+                      borderWidth: 1
+                    }]
+                  },
+                });
+              </script>
+            </div>
+            {% endif %}
+            {% endfor %}
+          </dl>
+        </div>
+      </div>
+    </div>
+    {% if loop.index is divisibleby 2 %}
+    </div>
+    {% endif %}
+    {% endfor %}
   </div>
-  {% endfor %}
 </body>
 </html>
