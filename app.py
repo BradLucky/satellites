@@ -94,7 +94,7 @@ def dashboard():
     dictionary using the satellite details as the key and its data
     as the values.
 
-    From there, created the SatMeasure classes for each satellite and use
+    From there, create the SatMeasure classes for each satellite and use
     that list of satellites to calculate all the data for the dashboard.
     """
     all_data = db_session.query(SatelliteData).all()

@@ -2,6 +2,8 @@
 
 This project provides a means for viewing various data points in a graphical UI. The data are pulled from satellites and imported to a database.
 
+The dashboard is built on the Bootstrap framework and is thus responsive. On a typical computer screen, the dashboard widgets will be two to a row, but as you decrease the screen width, they will move to one widget per row.
+
 ## Getting started
 First, you need to clone this repo into a directory of your choosing. Also, you must have Docker installed and have some working knowledge of using Docker. All commands listed here are assumed to be run from the directory you clone to.
 
@@ -37,6 +39,11 @@ mysql>
 
 ## Viewing the Dashboard
 Open up http://127.0.0.1:5000/ in your browser.
+
+## Running Unit Tests
+```bash
+$ docker exec -i satellites_web_1 pytest tests/test_app.py
+```
 
 ## Development Details on this project
 The following explains some of the approach taken for making this dashboard possible.
